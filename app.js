@@ -9,10 +9,16 @@ const orderRouter = require("./api/routes/orders");
 const app = express();
 
 mongoose.connect(
-    "mongodb+srv://prkpandey:" +
+    "mongodb+srv://" +
+        process.env.MONGO_ATLAS_USER +
+        ":" +
         process.env.MONGO_ATLAS_PW +
-        "@node-rest-shop.4peug.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
+        "@node-rest-shop.jqorjie.mongodb.net/?retryWrites=true&w=majority"
 );
+
+mongoose.connection.once("open", () => {
+    console.log("*** CONNECTED TO DATABASE ***");
+});
 
 app.use(morgan("dev"));
 app.use(bodyParser.urlencoded({ extended: false }));

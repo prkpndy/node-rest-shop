@@ -1,5 +1,4 @@
 const express = require("express");
-const mongoose = require("mongoose");
 
 const Product = require("../models/product");
 
@@ -8,9 +7,8 @@ const router = express.Router();
 router.get("/", (req, res, next) => {
     Product.find()
         .exec()
-        .then((docs) => {
-            console.log(docs);
-            res.status(200).json(docs);
+        .then((result) => {
+            res.status(200).json(result);
         })
         .catch((err) => {
             console.log(err);
@@ -22,7 +20,6 @@ router.get("/", (req, res, next) => {
 
 router.post("/", (req, res, next) => {
     const product = new Product({
-        _id: new mongoose.Types.ObjectId(),
         name: req.body.name,
         price: req.body.price,
     });
@@ -30,10 +27,9 @@ router.post("/", (req, res, next) => {
     product
         .save()
         .then((result) => {
-            console.log(result);
             res.status(201).json({
-                message: "Handling POST requests to /products",
-                createdProduct: product,
+                message: "Product added",
+                createdProduct: result,
             });
         })
         .catch((err) => {
@@ -49,11 +45,10 @@ router.get("/:productId", (req, res, next) => {
 
     Product.findById(productId)
         .exec()
-        .then((doc) => {
-            console.log(doc);
-            // If doc is not null
-            if (doc) {
-                res.status(200).json(doc);
+        .then((result) => {
+            // If result is not null
+            if (result) {
+                res.status(200).json(result);
             } else {
                 res.status(200).json({
                     message:
@@ -74,16 +69,17 @@ router.patch("/:productId", (req, res, next) => {
 
     const updatesInProduct = {};
 
-    for (const ops of req.body) {
-        updatesInProduct[ops.propName] = ops.propValue;
-    }
+    Object.keys(req.body).forEach((key) => {
+        updatesInProduct[key] = req.body[key];
+    });
 
-    // Can also use updateAll() as our ID will match only one Product
-    Product.updateOne({ _id: productId }, { $set: updatesInProduct })
+    Product.findByIdAndUpdate(productId, updatesInProduct)
         .exec()
         .then((result) => {
-            console.log(result);
-            res.status(200).json(result);
+            res.status(200).json({
+                message: `Updated product ${productId}`,
+                updatedProduct: result,
+            });
         })
         .catch((err) => {
             console.log(err);
@@ -95,11 +91,13 @@ router.patch("/:productId", (req, res, next) => {
 
 router.delete("/:productId", (req, res, next) => {
     const productId = req.params.productId;
-    Product.remove({ _id: productId })
+    Product.findByIdAndDelete(productId)
         .exec()
         .then((result) => {
-            console.log(result);
-            res.status(200).json(result);
+            res.status(200).json({
+                message: `Deleted product ${productId}`,
+                deletedProduct: productId,
+            });
         })
         .catch((err) => {
             console.log(err);
